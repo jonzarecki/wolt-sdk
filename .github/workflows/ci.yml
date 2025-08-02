@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+    
+    - name: Run linting
+      run: |
+        pip install flake8
+        flake8 wolt_api --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 wolt_api --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    
+    - name: Run type checking
+      run: |
+        pip install mypy
+        mypy wolt_api --ignore-missing-imports
+    
+    - name: Run tests (Rate Limited)
+      run: |
+        # Note: Tests are rate-limited to avoid overwhelming Wolt's APIs
+        # We run a subset of tests in CI to verify basic functionality
+        pytest tests/test_wolt_api.py::TestWoltAPI::test_get_nearby_restaurants_tel_aviv -v
+        pytest tests/test_wolt_api.py::TestWoltAPI::test_find_restaurants_by_name -v --tb=short
+      env:
+        PYTHONPATH: .
+    
+    - name: Test package installation
+      run: |
+        python -c "from wolt_api import WoltAPI; print('Package imports successfully')"
+        python -c "from wolt_api import Restaurant, WoltAPIError; print('All imports work')"
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit
+    
+    - name: Run safety check
+      run: safety check
+    
+    - name: Run bandit security scan
+      run: bandit -r wolt_api/
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Validate README
+      run: |
+        # Check that README.md exists and has basic content
+        test -f README.md
+        grep -q "Wolt Restaurant Availability API" README.md
+        grep -q "Quick Start" README.md
+        grep -q "Installation" README.md
+    
+    - name: Validate package structure
+      run: |
+        # Verify proper Python package structure
+        test -f setup.py
+        test -f requirements.txt
+        test -f wolt_api/__init__.py
+        test -d tests/
+        test -f LICENSE

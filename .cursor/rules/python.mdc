@@ -1,0 +1,40 @@
+# Cursor Rules for Wolt Restaurant Availability API
+
+## Project Guidelines
+
+### Code Style
+- **Simplicity over complexity**: Write straightforward, readable code
+- **Real API testing**: Always test against actual Wolt APIs
+- **TDD approach**: Write tests first, then implement functionality
+- **Minimal dependencies**: Use only essential packages
+
+### File Organization
+- `wolt_api/` - Main package directory
+- `tests/` - Test files (test_*.py)
+- `examples/` - Usage examples
+- `requirements.txt` - Project dependencies
+
+### API Design Principles
+1. **Clear method names**: `is_restaurant_open()`, `find_restaurants()`
+2. **Consistent return types**: Use dataclasses for structured responses
+3. **Proper error handling**: Specific exceptions for different error cases
+4. **Rate limiting**: Built-in delays to respect API limits
+
+### Testing Requirements
+- Test all public methods with real API calls
+- Include both positive and negative test cases
+- Test error conditions (404, rate limits, etc.)
+- Use Israeli coordinates for location-based tests
+
+### Dependencies to Use
+- `requests` - HTTP client
+- `pytest` - Testing framework
+- `dataclasses` - Structured data
+- `typing` - Type hints
+- `time` - Rate limiting delays
+
+### Forbidden
+- Complex frameworks (FastAPI, Flask) unless specifically needed
+- Over-engineering with abstract base classes
+- Premature optimization
+- Mock testing instead of real API testing
