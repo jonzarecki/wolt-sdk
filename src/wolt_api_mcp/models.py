@@ -21,7 +21,7 @@ class Restaurant(BaseModel):
         description="Restaurant slug identifier for URLs",
         min_length=3,
         max_length=200,
-        regex=r"^[a-z0-9\-_]+$",
+        pattern=r"^[a-z0-9\-_]+$",
     )
     
     is_online: bool = Field(
