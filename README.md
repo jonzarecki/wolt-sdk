@@ -1,95 +1,213 @@
-# Wolt Restaurant Availability API
+# Wolt Restaurant Availability MCP
 
-A simple Python API for programmatically checking restaurant availability on Wolt in Israel.
+[![CI](https://github.com/jonzarecki/wolt-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/jonzarecki/wolt-sdk/actions/workflows/ci.yml)
 
-## Features
-
-- **Israel-Wide Coverage**: Check any restaurant across all of Israel
-- **Comprehensive Restaurant Search**: Find restaurants by name and location nationwide  
-- **Bulk Restaurant Scanning**: Get nearby restaurants in any Israeli city
-- **Built-in Rate Limiting**: Respects API limits with configurable delays
-- **Real API Testing**: All functionality tested against live Wolt Israel endpoints
-- **Geographic Coverage**: From Eilat to Kiryat Shmona - complete national coverage
-
-## Quick Start
-
-```python
-from wolt_api import WoltAPI
-
-api = WoltAPI()
-
-# Check if a specific restaurant is open
-is_open = api.is_restaurant_open("restaurant-slug")
-
-# Find restaurants by name in Tel Aviv
-restaurants = api.find_restaurants("pizza", lat=32.0853, lon=34.7818)
-
-# Get all nearby restaurants
-nearby = api.get_nearby_restaurants(lat=32.0853, lon=34.7818, radius=2000)
-```
+A Model Context Protocol (MCP) server that exposes the Wolt restaurant availability API for Israel. It provides tools for searching restaurants, checking availability, and gathering delivery information across Israeli cities, designed to work seamlessly with Claude and other MCP clients.
 
 ## Installation
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+pip install git+https://github.com/jonzarecki/wolt-sdk
+```
 
-# Install in development mode (optional)
+You can also run the server via `npx` without installing it system-wide:
+
+```bash
+npx --yes github:jonzarecki/wolt-sdk
+```
+
+or clone the repository and install in editable mode:
+
+```bash
+git clone https://github.com/jonzarecki/wolt-sdk
+cd wolt-sdk
 pip install -e .
 ```
 
-## Testing
+## Usage
+
+Run the server directly (stdout/stdin transport):
 
 ```bash
-# Run all tests
-pytest tests/ -v
-
-# Run specific test
-pytest tests/test_wolt_api.py::TestWoltAPI::test_get_nearby_restaurants_tel_aviv -v
+wolt-mcp
 ```
+
+The server exposes three main tools:
+
+- `search_restaurants(...)`: search for restaurants by name across Israel
+- `check_restaurant_availability(...)`: check if a specific restaurant is open  
+- `get_nearby_restaurants(...)`: get restaurants near a specific location
+
+With FastMCP 2.9+ you can batch tool calls for efficiency using `call_tools_bulk` or `call_tool_bulk` from this package.
+
+See the docstrings in `wolt_api_mcp.server` for full parameter details.
+
+For more examples see [docs/examples.md](docs/examples.md). A quick Python usage snippet:
+
+```python
+from wolt_api_mcp import search_restaurants
+print(search_restaurants.fn(query="Pizza Hut", city="tel-aviv", max_results=10))
+```
+
+## Features
+
+- 🔍 **Restaurant Search**: Find restaurants by name with city filtering
+- ✅ **Availability Checking**: Real-time restaurant open/closed status
+- 🏙️ **Location-Based Discovery**: Get restaurants near specific cities
+- 🍕 **Cuisine Filtering**: Filter results by cuisine type  
+- ⚡ **Bulk Operations**: Efficient batch processing of multiple requests
+- 🛡️ **Input Validation**: Comprehensive parameter validation with Pydantic
+- ⏱️ **Rate Limiting**: Built-in rate limiting to respect API usage
+- 🚫 **Error Handling**: Graceful error handling with user-friendly messages
+- 📊 **Rich Formatting**: Well-formatted output with status indicators
+
+## MCP Client Configuration
+
+If your MCP client supports automatic server installation, add the following JSON to your `mcp.json` file. The client will fetch the package via `npx` and launch the server for you:
+
+```json
+{
+  "mcpServers": {
+    "wolt-api-mcp": {
+      "command": "npx --yes github:jonzarecki/wolt-sdk",
+      "env": {}
+    }
+  }
+}
+```
+
+For local development or direct installation:
+
+```json
+{
+  "mcpServers": {
+    "wolt-api-mcp": {
+      "command": "python",
+      "args": ["-m", "wolt_api_mcp.server"],
+      "env": {}
+    }
+  }
+}
+```
+
+## Development
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details. After cloning the repository run:
+
+```bash
+pip install -e .[test,dev]
+```
+
+Install the pre-commit hooks as well:
+
+```bash
+pre-commit install
+```
+
+Then run the test suite with coverage:
+
+```bash
+pytest --cov=wolt_api_mcp --cov-report=term-missing
+```
+
+### Code Quality
+
+The project uses modern Python tooling:
+
+```bash
+# Formatting
+black src/ tests/
+
+# Linting  
+ruff check src/ tests/
+
+# Type checking
+mypy src/
+
+# Security scanning
+bandit -r src/
+safety check
+```
+
+## API Reference
+
+### Tools
+
+#### `search_restaurants`
+Search for restaurants by name across Israel.
+
+**Parameters:**
+- `query` (str): Restaurant name or search term (2-100 chars)
+- `city` (str, optional): City filter (max 50 chars)
+- `max_results` (int): Maximum results (1-50, default: 20)
+- `rate_limit_delay` (float): Request delay (0.1-5.0s, default: 1.0)
+
+#### `check_restaurant_availability`
+Check if a specific restaurant is currently open.
+
+**Parameters:**
+- `slug` (str): Restaurant slug from Wolt URL (3-200 chars)
+- `rate_limit_delay` (float): Request delay (0.1-5.0s, default: 1.0)
+
+#### `get_nearby_restaurants`  
+Get restaurants near a specific location.
+
+**Parameters:**
+- `city` (str): City name in Israel (2-50 chars)
+- `cuisine_filter` (str, optional): Cuisine type filter (max 50 chars)
+- `max_results` (int): Maximum results (1-100, default: 20)
+- `only_open` (bool): Only return open restaurants (default: false)
+- `rate_limit_delay` (float): Request delay (0.1-5.0s, default: 1.0)
 
 ## Examples
 
-The `examples/` directory contains several demonstration scripts:
-
-- **`basic_usage.py`** - Basic API functionality demo
-- **`cuisine_analytics.py`** - Analyze restaurant data by cuisine type  
-- **`monitoring_script.py`** - Monitor specific restaurants for status changes
-
-Run examples:
-```bash
-python examples/basic_usage.py
-python examples/cuisine_analytics.py
+### Basic Restaurant Search
+```python
+# Search for pizza places in Tel Aviv
+result = search_restaurants.fn("pizza", city="tel-aviv", max_results=10)
 ```
 
-## Complete Demo
-
-Run the comprehensive demo:
-```bash
-python demo.py
+### Check Availability
+```python
+# Check if a specific restaurant is open
+result = check_restaurant_availability.fn("pizza-hut-tel-aviv-central")
 ```
 
-## API Endpoints Used
+### Get Nearby Restaurants
+```python
+# Get sushi restaurants in Jerusalem that are currently open
+result = get_nearby_restaurants.fn(
+    city="jerusalem", 
+    cuisine_filter="sushi", 
+    only_open=True,
+    max_results=15
+)
+```
 
-This package uses Wolt's unofficial consumer API:
-- Venue status: `GET /order-catalog/api/v1/venues/{slug}/dynamic`
-- Search venues: `GET /search/v2/venues`
-- Nearby venues: `GET /order-catalog/api/v1/pages/restaurants`
+### Bulk Operations
+```python
+from wolt_api_mcp import call_tools_bulk
+from fastmcp.contrib.bulk_tool_caller import CallToolRequest
+import asyncio
 
-## Rate Limits & Performance
+requests = [
+    CallToolRequest(tool="search_restaurants", arguments={"query": "burger", "city": "tel-aviv"}),
+    CallToolRequest(tool="search_restaurants", arguments={"query": "sushi", "city": "jerusalem"}),
+]
 
-The API respects Wolt's rate limits (~60 requests/minute) with built-in delays.
+results = asyncio.run(call_tools_bulk(requests))
+```
 
-**Performance Notes:**
-- **Local searches** (specific coordinates): ~1-3 seconds
-- **Israel-wide restaurant lookup**: ~2-8 seconds per restaurant (searches up to 17+ areas)
-- **Rate limit considerations**: May hit Wolt's limits during rapid bulk searches
-- **Recommendation**: Cache results for frequently checked restaurants
+## Rate Limiting Best Practices
 
-**Coverage Areas:**
-- Tel Aviv Metropolitan Area (Gush Dan)
-- Jerusalem & surroundings
-- Haifa & Northern Israel  
-- Central Israel (Netanya, Rehovot, Modi'in)
-- Southern Israel (Be'er Sheva, Ashkelon, Ashdod, Eilat)
-- And more - complete national coverage!
+- Use 1.0-2.0 second delays for comprehensive searches
+- Use 0.5 second delays for bulk availability checks
+- Respect the API and avoid excessive requests
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Disclaimer
+
+This library is for educational and research purposes. Please respect Wolt's terms of service and use the API responsibly.
