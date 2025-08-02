@@ -1,0 +1,33 @@
+---
+alwaysApply: true
+---
+
+# GitHub Actions Verification Rule
+
+**CRITICAL**: Always verify GitHub Actions pass before completing any task that modifies code.
+
+## Verification Process
+
+When code changes are made:
+
+1. **Immediate Check**: After pushing changes, immediately check workflow status
+2. **Wait Strategy**: If still running, wait 10 seconds and recheck (repeat 2 more times max)  
+3. **Failure Analysis**: If failed, get detailed logs using `failed_only=true`
+4. **Fix and Retry**: Address root causes, commit fixes, and reverify
+5. **Success Confirmation**: Only consider task complete when ALL jobs pass
+
+## Implementation
+
+- Use GitHub API tools to check workflow runs
+- Monitor the latest run for the current commit SHA
+- Get failed job logs to understand specific issues
+- Address dependency conflicts, API changes, version compatibility
+- Don't ignore warnings - they can become errors in future versions
+
+## Status Outcomes
+
+✅ **SUCCESS**: All jobs pass - task can be completed
+❌ **FAILURE**: Any job fails - must fix before completion  
+⏳ **RUNNING**: Wait and recheck (up to 3 attempts)
+
+This ensures code quality and prevents introducing breaking changes.

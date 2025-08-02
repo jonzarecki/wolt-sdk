@@ -3,7 +3,7 @@ Data models for Wolt API with comprehensive validation
 """
 
 from typing import List, Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class Restaurant(BaseModel):
@@ -70,20 +70,23 @@ class Restaurant(BaseModel):
     def is_open(self) -> bool:
         """Alias for is_online for compatibility."""
         return self.is_online
-    
-    @validator("slug")
+
+    @field_validator("slug")
+    @classmethod
     def validate_slug(cls, v: str) -> str:
         """Validate that slug contains only lowercase letters, numbers, hyphens, and underscores."""
         return v.lower()
-    
-    @validator("name")
+
+    @field_validator("name")
+    @classmethod
     def validate_name(cls, v: str) -> str:
         """Validate restaurant name."""
         if not v.strip():
             raise ValueError("Restaurant name cannot be empty")
         return v.strip()
-    
-    @validator("cuisine_types")
+
+    @field_validator("cuisine_types")
+    @classmethod
     def validate_cuisine_types(cls, v: List[str]) -> List[str]:
         """Validate cuisine types list."""
         return [cuisine.strip() for cuisine in v if cuisine.strip()]
@@ -93,11 +96,10 @@ class Restaurant(BaseModel):
         status = "🟢 OPEN" if self.is_online else "🔴 CLOSED"
         return f"{self.name} ({status})"
     
-    class Config:
-        """Pydantic configuration."""
-        validate_assignment = True
-        extra = "forbid"
-        schema_extra = {
+    model_config = ConfigDict(
+        validate_assignment=True,
+        extra="forbid",
+        json_schema_extra={
             "example": {
                 "name": "Pizza Hut",
                 "slug": "pizza-hut-tel-aviv-central",
@@ -110,6 +112,7 @@ class Restaurant(BaseModel):
                 "city": "tel-aviv",
             }
         }
+    )
 
 
 class SearchParams(BaseModel):
@@ -141,16 +144,18 @@ class SearchParams(BaseModel):
         ge=0.1,
         le=5.0,
     )
-    
-    @validator("query")
+
+    @field_validator("query")
+    @classmethod
     def validate_query(cls, v: str) -> str:
         """Validate search query."""
         query = v.strip()
         if not query:
             raise ValueError("Search query cannot be empty")
         return query
-    
-    @validator("city")
+
+    @field_validator("city")
+    @classmethod
     def validate_city(cls, v: Optional[str]) -> Optional[str]:
         """Validate city name."""
         if v is not None:
@@ -159,8 +164,8 @@ class SearchParams(BaseModel):
                 return None
             return city
         return v
-    
-    class Config:
-        """Pydantic configuration."""
-        validate_assignment = True
-        extra = "forbid"
+
+    model_config = ConfigDict(
+        validate_assignment=True,
+        extra="forbid"
+    )

@@ -2,7 +2,7 @@
 name = "wolt-api-mcp"
 version = "0.2.0"
 description = "MCP server wrapping Wolt restaurant availability API for Israel"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "requests>=2.31.0",
     "fastmcp>=0.6.0",
