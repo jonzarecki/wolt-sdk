@@ -79,8 +79,8 @@ python_functions = ["test_*"]
 addopts = "-vv --strict-markers --strict-config"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks tests as integration tests",
-    "unit: marks tests as unit tests",
+    "integration: marks tests as integration tests requiring external API calls",
+    "unit: marks tests as unit tests with no external dependencies",
 ]
 filterwarnings = [
     "error",
