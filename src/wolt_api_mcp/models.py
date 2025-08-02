@@ -38,7 +38,7 @@ class Restaurant(BaseModel):
         None,
         description="Restaurant rating",
         ge=0.0,
-        le=5.0,
+        le=10.0,
     )
     
     delivery_estimate: Optional[str] = Field(
