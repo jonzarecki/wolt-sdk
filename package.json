@@ -1,0 +1,19 @@
+{
+  "name": "wolt-api-mcp",
+  "version": "0.2.0",
+  "description": "MCP server wrapping Wolt restaurant availability API for Israel",
+  "main": "index.js",
+  "bin": {
+    "wolt-mcp": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["mcp", "wolt", "restaurants", "israel", "availability"],
+  "author": "Wolt API Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jonzarecki/wolt-sdk.git"
+  }
+}

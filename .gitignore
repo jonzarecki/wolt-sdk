@@ -162,11 +162,8 @@ cython_debug/
 .vscode/
 
 # Project specific files
-*.json
-*.txt
 !requirements.txt
 debug_*.py
-test_*.py
 analyze_*.py
 investigate_*.py
 check_*.py
