@@ -46,7 +46,8 @@ class TestWoltAPIUnit:
         
         # Test session creation
         assert hasattr(api1, 'session')
-        assert hasattr(api1, '_last_request_time')
+        # _last_request_time is set lazily when first request is made
+        assert api1._last_request_time is None
     
     @pytest.mark.unit
     def test_restaurant_model_creation(self):
